@@ -8,16 +8,21 @@ export default async function handler(req, res) {
 
     const response = await fetch(googleScriptURL, {
       method: "POST",
-      body: JSON.stringify(req.body),
-      headers: {
-        "Content-Type": "application/json"
-      }
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(req.body)
     });
 
-    const result = await response.json();
-    return res.status(200).json(result);
-  } catch (error) {
-    console.error("Proxy error:", error);
-    return res.status(500).json({ error: "Proxy failed" });
+    const text = await response.text();
+
+    try {
+      const data = JSON.parse(text);
+      return res.status(200).json(data);
+    } catch (err) {
+      console.error("❌ Invalid JSON from Google Script:", text);
+      return res.status(500).json({ error: "Invalid response from Google Script" });
+    }
+  } catch (err) {
+    console.error("❌ Proxy error:", err);
+    return res.status(500).json({ error: "Internal server error" });
   }
 }
